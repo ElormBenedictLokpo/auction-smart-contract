@@ -10,12 +10,8 @@ contract Auction{
 
     enum AuctionStates {Started, Running, Ended, Cancelled}
 
-    struct Bidder{
-        address ethaddress;
-        uint256 amount;
-    }
-
-    mapping(address => Bidder[]) public bidders;
+  
+    mapping(address => uint) public bidders;
 
 
     constructor(){
@@ -34,25 +30,11 @@ contract Auction{
 
     function bid() public payable notOwner{
         require(msg.value >= initialPrice, "Cannot bid an amount less than initial price");
-        Bidder memory newBidder = Bidder({
-            ethaddress: msg.sender,
-            amount: msg.value
-        });
 
-        bidders[address(this)].push(newBidder);
+        bidders[msg.sender] += msg.value / 1 ether;
+       
     }
 
-    function getAllBidders() public view returns(Bidder[] memory){
-        return bidders[address(this)];
-    }
-
-    function getBidderBidValue(address _bidder) public view returns(Bidder memory){
-        for(uint i =0; i < bidders[address(this)].length; i++){
-            if (bidders[address(this)][i].ethaddress == _bidder){
-                return bidders[address(this)][i];
-            }
-        }
-
-        return Bidder(address(0), 0);
-    }
+   
+  
 }
