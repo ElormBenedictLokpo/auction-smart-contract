@@ -1,7 +1,5 @@
 //SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;//SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 contract Auction{
@@ -46,5 +44,15 @@ contract Auction{
 
     function getAllBidders() public view returns(Bidder[] memory){
         return bidders[address(this)];
+    }
+
+    function getBidderBidValue(address _bidder) public view returns(Bidder memory){
+        for(uint i =0; i < bidders[address(this)].length; i++){
+            if (bidders[address(this)][i].ethaddress == _bidder){
+                return bidders[address(this)][i];
+            }
+        }
+
+        return Bidder(address(0), 0);
     }
 }
