@@ -20,7 +20,7 @@ contract Auction{
     }
 
     Bidder[] bidders;
-
+    Bidder auctionWinner;
 
     constructor(){
         owner = msg.sender;
@@ -86,18 +86,32 @@ contract Auction{
         return max_amount;
     }
 
+    function payOutLowBidders() public{
+        require(currentState == AuctionStates.Ended, "End auction first");
+
+        uint highestBid = determineHighestBidder();
+
+        for (uint i = 0; i < bidders.length;i++){
+            if (bidders[i].amount != highestBid){
+                payable(bidders[i].ethaddress).transfer(bidders[i].amount);
+            }
+        }
+    }
+
     function endAuction() public returns (Bidder memory) {
         currentState = AuctionStates.Ended;
         uint higestBid = determineHighestBidder();
-        Bidder memory auctionWinner;
+        
 
         for (uint i = 0; i < bidders.length; i++){
             if (bidders[i].amount == higestBid){
                 auctionWinner = bidders[i];
+                return bidders[i];
             }
         }
 
-        return auctionWinner;
+        payOutLowBidders();
+        return Bidder(address(0), 0);
     }
 
 
