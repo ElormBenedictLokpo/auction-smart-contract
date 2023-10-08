@@ -12,7 +12,7 @@ contract Auction{
     enum AuctionStates {Started, Ended, Cancelled}
     AuctionStates currentState;
   
-    //mapping(address => uint) public bidders;
+    
 
     struct Bidder{
         address ethaddress;
