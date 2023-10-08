@@ -7,6 +7,7 @@ contract Auction{
     uint startTime;
     uint endTime;
     uint initialPrice = 0.061 ether;
+    uint currentHighestBid;
 
     enum AuctionStates {Started, Ended, Cancelled}
     AuctionStates currentState;
@@ -26,6 +27,7 @@ contract Auction{
         startTime = block.number;
         endTime = 40320;
         currentState = AuctionStates.Started;
+        currentHighestBid = initialPrice;
     }
 
     modifier isOwner(){
@@ -38,27 +40,66 @@ contract Auction{
         _;
     }
 
+    
 
     function bid() public payable notOwner{
         require(msg.value >= initialPrice, "Cannot bid an amount less than initial price");
         require(currentState == AuctionStates.Started, "Auction not started");
         require(currentState != AuctionStates.Cancelled, "Auction cancelled");
+        require(currentState != AuctionStates.Ended, "Auction cancelled");
+        require(currentHighestBid < msg.value, "You cannot bid an amount same or lower");
+
         require(startTime <= endTime, "Auction ended");
+        
+        if (currentHighestBid < msg.value){
+            currentHighestBid = msg.value;
+        }
 
         for (uint i = 0; i< bidders.length; i++){
             if(bidders[i].ethaddress == msg.sender){
                 bidders[i].amount += msg.value/1;
-            }else{
-                Bidder memory newBidder = Bidder({
+
+                return;
+            }
+        }
+
+
+            Bidder memory newBidder = Bidder({
                     ethaddress: msg.sender,
                     amount: msg.value/1
                 });
                 bidders.push(newBidder);
+       
+    }
+    function getAllBidders() public view returns(Bidder[] memory){
+        return bidders;
+    }
+
+    function determineHighestBidder() public view returns (uint){
+        uint max_amount = bidders[0].amount;
+        for (uint i=0; i < bidders.length; i++){
+            if (bidders[i].amount > max_amount){
+                max_amount = bidders[i].amount;
+            }            
+        }
+
+        return max_amount;
+    }
+
+    function endAuction() public returns (Bidder memory) {
+        currentState = AuctionStates.Ended;
+        uint higestBid = determineHighestBidder();
+        Bidder memory auctionWinner;
+
+        for (uint i = 0; i < bidders.length; i++){
+            if (bidders[i].amount == higestBid){
+                auctionWinner = bidders[i];
             }
         }
 
-       
+        return auctionWinner;
     }
+
 
     function getBidderBidAmount(address _bidder) public view returns(Bidder memory) {
             for (uint i = 0; i< bidders.length; i++){
@@ -70,8 +111,9 @@ contract Auction{
             return Bidder(address(0), 0);
     }
 
-   function endAuction() public {
-        
+   
+    function cancelAuction() public {
+        currentState = AuctionStates.Cancelled;
    }
   
-}
+} 
